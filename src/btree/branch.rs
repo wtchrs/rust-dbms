@@ -132,7 +132,7 @@ impl<B: ByteSliceMut> Branch<B> {
         let next_index = dest.num_pairs();
         let pair = &self.body[0];
         dest.body.insert(next_index, pair.len()).expect("dest branch must have space");
-        dest.body[next_index].copy_from_slice(&pair);
+        dest.body[next_index].copy_from_slice(pair);
         self.body.remove(0);
     }
 }

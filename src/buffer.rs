@@ -130,7 +130,7 @@ impl BufferPoolManager {
         {
             let buffer = Rc::get_mut(&mut frame.buffer).ok_or(BufferError::BufferNotMutable)?;
             if buffer.is_dirty.get() {
-                self.disk.write_page(evict_page_id, &buffer.page.get_mut().as_slice())?;
+                self.disk.write_page(evict_page_id, buffer.page.get_mut().as_slice())?;
             }
             buffer.page_id = page_id;
             buffer.is_dirty.set(false);

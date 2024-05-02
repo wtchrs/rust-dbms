@@ -49,7 +49,6 @@ impl BTree {
     }
 
     fn search_internal(
-        &self,
         bufmgr: &mut BufferPoolManager,
         node_buffer: Rc<Buffer>,
         search_mode: SearchMode,
@@ -75,7 +74,7 @@ impl BTree {
                 drop(node_page);
                 drop(node_buffer);
                 let child_buffer = bufmgr.fetch_page(child_page_id)?;
-                self.search_internal(bufmgr, child_buffer, search_mode)
+                Self::search_internal(bufmgr, child_buffer, search_mode)
             }
         }
     }
@@ -86,11 +85,10 @@ impl BTree {
         search_mode: SearchMode,
     ) -> Result<Iter, BTreeError> {
         let root_page = self.fetch_root_page(bufmgr)?;
-        self.search_internal(bufmgr, root_page, search_mode)
+        Self::search_internal(bufmgr, root_page, search_mode)
     }
 
     fn insert_internal(
-        &self,
         bufmgr: &mut BufferPoolManager,
         node_buffer: Rc<Buffer>,
         key: &[u8],
@@ -149,7 +147,7 @@ impl BTree {
                 let child_idx = branch.search_child_idx(key);
                 let child_page_id = branch.child_at(child_idx);
                 let child_buffer = bufmgr.fetch_page(child_page_id)?;
-                match self.insert_internal(bufmgr, child_buffer, key, value)? {
+                match Self::insert_internal(bufmgr, child_buffer, key, value)? {
                     None => Ok(None),
                     Some((overflow_key_from_child, overflow_child_page_id)) => {
                         if branch
@@ -191,7 +189,9 @@ impl BTree {
         let mut meta_page = meta_buffer.page.borrow_mut();
         let mut meta = meta::Meta::new(meta_page.as_mut_slice());
         let root_buffer = bufmgr.fetch_page(meta.header.root_page_id)?;
-        if let Some((key, child_page_id)) = self.insert_internal(bufmgr, root_buffer, key, value)? {
+        if let Some((key, child_page_id)) =
+            Self::insert_internal(bufmgr, root_buffer, key, value)?
+        {
             let new_root_buffer = bufmgr.create_page()?;
             let mut new_root_page = new_root_buffer.page.borrow_mut();
             let mut new_root = Node::new(new_root_page.as_mut_slice());
