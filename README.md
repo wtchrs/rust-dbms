@@ -9,8 +9,8 @@ A simple database management system written in Rust.
 - [x] ~~Disk manager~~
 - [x] ~~Buffer pool manager~~
 - [x] ~~B+ tree~~
-- [ ] Query executor
-- [ ] Query planner
+- [x] ~~Query executor~~
+- [x] ~~Query planner~~
 - [ ] System catalog and table manager
 - [ ] SQL parser
 - [x] ~~Unique index~~
