@@ -1,7 +1,7 @@
 use std::error::Error;
 
-use super::{BoxExecutor, Condition, TupleSearchMode};
 use super::executor::{ExecFilter, ExecIndexScan, ExecSeqScan};
+use super::{BoxExecutor, Condition, TupleSearchMode};
 
 use crate::btree::BTree;
 use crate::buffer::BufferPoolManager;
@@ -49,6 +49,10 @@ impl<'a> PlanNode for IndexScan<'a> {
         let table_btree = BTree::new(self.table_meta_page_id);
         let index_btree = BTree::new(self.index_meta_page_id);
         let index_iter = index_btree.search(bufmgr, self.search_mode.encode())?;
-        Ok(Box::new(ExecIndexScan::new(table_btree, index_iter, self.while_cond)))
+        Ok(Box::new(ExecIndexScan::new(
+            table_btree,
+            index_iter,
+            self.while_cond,
+        )))
     }
 }

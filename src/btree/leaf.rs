@@ -1,9 +1,9 @@
-use std::mem::size_of;
-use zerocopy::{AsBytes, ByteSlice, ByteSliceMut, FromBytes, FromZeroes, Ref};
 use crate::btree::bsearch::binary_search_by;
 use crate::btree::pair::Pair;
 use crate::disk::PageId;
 use crate::slotted::{Pointer, Slotted};
+use std::mem::size_of;
+use zerocopy::{AsBytes, ByteSlice, ByteSliceMut, FromBytes, FromZeroes, Ref};
 
 #[derive(Debug, FromZeroes, FromBytes, AsBytes)]
 #[repr(C)]
@@ -118,7 +118,8 @@ impl<B: ByteSliceMut> Leaf<B> {
     pub fn transfer(&mut self, dest: &mut Leaf<impl ByteSliceMut>) {
         let next_index = dest.num_pairs();
         let Pair { key, value } = self.pair_at(0);
-        dest.insert(next_index, key, value).expect("dest leaf must have space");
+        dest.insert(next_index, key, value)
+            .expect("dest leaf must have space");
         self.body.remove(0);
     }
 }
@@ -164,7 +165,7 @@ mod tests {
         let mut page_data = vec![0; 62];
         let mut leaf_page = Leaf::new(page_data.as_mut_slice());
         leaf_page.initialize();
-        
+
         let id = leaf_page.search_slot_id(b"deadbeef").unwrap_err();
         leaf_page.insert(id, b"deadbeef", b"world").unwrap();
         let id = leaf_page.search_slot_id(b"facebook").unwrap_err();
@@ -178,11 +179,11 @@ mod tests {
 
         let split_key = leaf_page.split_insert(&mut leaf_page_new, b"beefdead", b"hello");
         assert_eq!(b"facebook".to_vec(), split_key);
-        
+
         assert_eq!(2, leaf_page_new.num_pairs());
         assert_eq!(Ok(0), leaf_page_new.search_slot_id(b"beefdead"));
         assert_eq!(Ok(1), leaf_page_new.search_slot_id(b"deadbeef"));
-        
+
         assert_eq!(1, leaf_page.num_pairs());
         assert_eq!(Ok(0), leaf_page.search_slot_id(b"facebook"));
     }

@@ -1,9 +1,9 @@
-use std::error::Error;
 use putty_db::buffer::{BufferPool, BufferPoolManager};
 use putty_db::disk::{DiskManager, PageId};
 use putty_db::query::planner::{Filter, PlanNode, SeqScan};
 use putty_db::query::TupleSearchMode;
 use putty_db::tuple;
+use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let disk = DiskManager::open("table.tbl")?;

@@ -1,7 +1,7 @@
-use std::error::Error;
 use putty_db::btree::{BTree, SearchMode};
 use putty_db::buffer::{BufferPool, BufferPoolManager};
 use putty_db::disk::{DiskManager, PageId};
+use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let disk = DiskManager::open("btree.btr")?;

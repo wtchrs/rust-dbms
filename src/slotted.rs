@@ -114,7 +114,10 @@ impl<B: ByteSliceMut> Slotted<B> {
         let free_space_offset = self.header.free_space_offset as usize;
         let offset_orig = pointers[index].offset as usize;
         let shift_range = free_space_offset..offset_orig;
-        self.body.copy_within(shift_range, (free_space_offset as isize - len_incr) as usize);
+        self.body.copy_within(
+            shift_range,
+            (free_space_offset as isize - len_incr) as usize,
+        );
         let free_space_offset_new = (free_space_offset as isize - len_incr) as usize;
         self.header.free_space_offset = free_space_offset_new as u16;
         let free_space_offset_new = self.header.free_space_offset;
@@ -155,7 +158,7 @@ mod tests {
     fn test() {
         let mut page_data = vec![0u8; 128];
         let mut slotted = Slotted::new(page_data.as_mut_slice());
-        let insert = |slotted: &mut Slotted<&mut[u8]>, index: usize, buf: &[u8]| {
+        let insert = |slotted: &mut Slotted<&mut [u8]>, index: usize, buf: &[u8]| {
             slotted.insert(index, buf.len()).unwrap();
             slotted[index].copy_from_slice(buf);
         };

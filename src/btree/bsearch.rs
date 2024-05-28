@@ -1,7 +1,8 @@
 use std::cmp::Ordering;
 
 pub fn binary_search_by<F>(len: usize, mut f: F) -> Result<usize, usize>
-    where F: FnMut(usize) -> Ordering
+where
+    F: FnMut(usize) -> Ordering,
 {
     let mut start = 0;
     let mut end = len;

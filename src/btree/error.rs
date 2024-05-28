@@ -1,5 +1,5 @@
-use thiserror::Error;
 use crate::buffer;
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum BTreeError {

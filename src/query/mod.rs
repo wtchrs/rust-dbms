@@ -1,9 +1,9 @@
 pub mod executor;
 pub mod planner;
 
-use executor::Executor;
 use crate::btree::SearchMode;
 use crate::tuple;
+use executor::Executor;
 
 pub type Tuple = Vec<Vec<u8>>;
 

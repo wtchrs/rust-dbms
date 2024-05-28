@@ -12,6 +12,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     while let Some((key, value)) = iter.next(&mut bufmgr)? {
         println!("{:02x?} = {:02x?}", key, value);
     }
-    
+
     Ok(())
 }

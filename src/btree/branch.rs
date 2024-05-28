@@ -1,9 +1,9 @@
-use std::mem::size_of;
-use zerocopy::{AsBytes, ByteSlice, ByteSliceMut, FromBytes, FromZeroes, Ref};
 use crate::btree::bsearch::binary_search_by;
 use crate::btree::pair::Pair;
 use crate::disk::PageId;
 use crate::slotted::{Pointer, Slotted};
+use std::mem::size_of;
+use zerocopy::{AsBytes, ByteSlice, ByteSliceMut, FromBytes, FromZeroes, Ref};
 
 #[derive(Debug, FromZeroes, FromBytes, AsBytes)]
 #[repr(C)]
@@ -108,8 +108,7 @@ impl<B: ByteSliceMut> Branch<B> {
                 let index = self
                     .search_slot_id(new_key)
                     .expect_err("key must be unique");
-                self
-                    .insert(index, new_key, new_page_id)
+                self.insert(index, new_key, new_page_id)
                     .expect("old branch must have space");
                 break;
             }
@@ -131,7 +130,9 @@ impl<B: ByteSliceMut> Branch<B> {
     pub fn transfer(&mut self, dest: &mut Branch<impl ByteSliceMut>) {
         let next_index = dest.num_pairs();
         let pair = &self.body[0];
-        dest.body.insert(next_index, pair.len()).expect("dest branch must have space");
+        dest.body
+            .insert(next_index, pair.len())
+            .expect("dest branch must have space");
         dest.body[next_index].copy_from_slice(pair);
         self.body.remove(0);
     }

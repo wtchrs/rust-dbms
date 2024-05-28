@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter};
 
-pub fn encode(elems: impl Iterator<Item=impl AsRef<[u8]>>, bytes: &mut Vec<u8>) {
+pub fn encode(elems: impl Iterator<Item = impl AsRef<[u8]>>, bytes: &mut Vec<u8>) {
     elems.for_each(|elem| {
         let elem_bytes = elem.as_ref();
         let len = internal::encoded_size(elem_bytes.len());
@@ -18,7 +18,7 @@ pub fn decode(bytes: &[u8], elems: &mut Vec<Vec<u8>>) {
     }
 }
 
-pub struct Pretty<'a, T> (pub &'a [T]);
+pub struct Pretty<'a, T>(pub &'a [T]);
 
 impl<'a, T: AsRef<[u8]>> Debug for Pretty<'a, T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

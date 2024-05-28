@@ -1,8 +1,8 @@
+use crate::disk::{DiskManager, Page, PageId, PAGE_SIZE};
 use std::cell::{Cell, RefCell};
 use std::collections::HashMap;
 use std::ops::{Index, IndexMut};
 use std::rc::Rc;
-use crate::disk::{DiskManager, Page, PAGE_SIZE, PageId};
 
 #[derive(Debug, thiserror::Error)]
 pub enum BufferError {
@@ -115,7 +115,7 @@ impl BufferPoolManager {
             page_table: HashMap::new(),
         }
     }
-    
+
     pub fn fetch_page(&mut self, page_id: PageId) -> Result<Rc<Buffer>, BufferError> {
         if let Some(&buffer_id) = self.page_table.get(&page_id) {
             let frame = &mut self.pool[buffer_id];
@@ -130,7 +130,8 @@ impl BufferPoolManager {
         {
             let buffer = Rc::get_mut(&mut frame.buffer).ok_or(BufferError::BufferNotMutable)?;
             if buffer.is_dirty.get() {
-                self.disk.write_page(evict_page_id, buffer.page.get_mut().as_slice())?;
+                self.disk
+                    .write_page(evict_page_id, buffer.page.get_mut().as_slice())?;
             }
             buffer.page_id = page_id;
             buffer.is_dirty.set(false);
@@ -144,7 +145,7 @@ impl BufferPoolManager {
         self.page_table.insert(page_id, buffer_id);
         Ok(page)
     }
-    
+
     pub fn create_page(&mut self) -> Result<Rc<Buffer>, BufferError> {
         let buffer_id = self.pool.evict().ok_or(BufferError::NoFreeBuffer)?;
         let frame = &mut self.pool[buffer_id];
@@ -166,7 +167,7 @@ impl BufferPoolManager {
         self.page_table.insert(page_id, buffer_id);
         Ok(page)
     }
-    
+
     pub fn flush(&mut self) -> Result<(), BufferError> {
         for (&page_id, &buffer_id) in self.page_table.iter() {
             let frame = &self.pool[buffer_id];
@@ -183,21 +184,21 @@ impl BufferPoolManager {
 mod tests {
     use super::*;
     use tempfile::tempfile;
-    
+
     #[test]
     fn test() {
         let mut hello = Vec::with_capacity(PAGE_SIZE);
         hello.extend_from_slice(b"hello");
         hello.resize(PAGE_SIZE, 0);
-        
+
         let mut world = Vec::with_capacity(PAGE_SIZE);
         world.extend_from_slice(b"world");
         world.resize(PAGE_SIZE, 0);
-        
+
         let disk = DiskManager::new(tempfile().unwrap()).unwrap();
         let pool = BufferPool::new(1);
         let mut bufmgr = BufferPoolManager::new(disk, pool);
-        
+
         let page1_id = {
             let buffer = bufmgr.create_page().unwrap();
             assert!(bufmgr.create_page().is_err());
@@ -212,7 +213,7 @@ mod tests {
             let page = buffer.page.borrow();
             assert_eq!(hello.as_slice(), page.as_slice());
         }
-        
+
         let page2_id = {
             let buffer = bufmgr.create_page().unwrap();
             let mut page = buffer.page.borrow_mut();

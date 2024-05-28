@@ -1,21 +1,21 @@
-use std::convert::identity;
-use std::rc::Rc;
-use error::BTreeError;
-use zerocopy::ByteSlice;
 use crate::btree::branch::Branch;
 use crate::btree::leaf::Leaf;
 use crate::btree::node::Node;
 use crate::btree::pair::Pair;
 use crate::buffer::{Buffer, BufferPoolManager};
 use crate::disk::PageId;
+use error::BTreeError;
+use std::convert::identity;
+use std::rc::Rc;
+use zerocopy::ByteSlice;
 
-mod leaf;
 mod branch;
-mod pair;
 mod bsearch;
+mod error;
+mod leaf;
 mod meta;
 mod node;
-mod error;
+mod pair;
 
 pub struct BTree {
     pub meta_page_id: PageId,
@@ -110,9 +110,8 @@ impl BTree {
                     Ok(None)
                 } else {
                     let prev_leaf_id = leaf.prev_page_id();
-                    let prev_leaf_buffer = prev_leaf_id
-                        .map(|id| bufmgr.fetch_page(id))
-                        .transpose()?;
+                    let prev_leaf_buffer =
+                        prev_leaf_id.map(|id| bufmgr.fetch_page(id)).transpose()?;
 
                     let new_leaf_buffer = bufmgr.create_page()?;
 
@@ -189,8 +188,7 @@ impl BTree {
         let mut meta_page = meta_buffer.page.borrow_mut();
         let mut meta = meta::Meta::new(meta_page.as_mut_slice());
         let root_buffer = bufmgr.fetch_page(meta.header.root_page_id)?;
-        if let Some((key, child_page_id)) =
-            Self::insert_internal(bufmgr, root_buffer, key, value)?
+        if let Some((key, child_page_id)) = Self::insert_internal(bufmgr, root_buffer, key, value)?
         {
             let new_root_buffer = bufmgr.create_page()?;
             let mut new_root_page = new_root_buffer.page.borrow_mut();
@@ -280,10 +278,10 @@ impl SearchMode {
 
 #[cfg(test)]
 mod tests {
-    use tempfile::tempfile;
+    use super::*;
     use crate::buffer::BufferPool;
     use crate::disk::DiskManager;
-    use super::*;
+    use tempfile::tempfile;
 
     #[test]
     fn test() {
@@ -330,7 +328,6 @@ mod tests {
                 .insert(&mut bufmgr, &(i * 2).to_be_bytes(), &[0; 1024])
                 .unwrap();
         }
-
 
         for i in 0u64..15 {
             let (key, _) = btree

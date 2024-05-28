@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use bincode::Options;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct Pair<'a> {

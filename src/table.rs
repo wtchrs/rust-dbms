@@ -1,8 +1,8 @@
-use std::error::Error;
 use crate::btree::{BTree, Iter, SearchMode};
 use crate::buffer::BufferPoolManager;
 use crate::disk::PageId;
 use crate::tuple;
+use std::error::Error;
 
 pub struct Table {
     pub meta_page_id: PageId,
@@ -30,7 +30,11 @@ impl Table {
         tuple::encode(record[self.num_key_elems..].iter(), &mut value);
         // Check unique constraints.
         for unique_index in &self.unique_index {
-            if unique_index.search(bufmgr, key.clone())?.next(bufmgr)?.is_some() {
+            if unique_index
+                .search(bufmgr, key.clone())?
+                .next(bufmgr)?
+                .is_some()
+            {
                 return Err("Unique constraint violation".into());
             }
         }
@@ -83,12 +87,12 @@ impl UniqueIndex {
 
 #[cfg(test)]
 mod tests {
-    use tempfile::tempfile;
+    use super::*;
     use crate::btree;
     use crate::buffer::BufferPool;
-    use crate::disk::{DiskManager};
+    use crate::disk::DiskManager;
     use crate::tuple::encode;
-    use super::*;
+    use tempfile::tempfile;
 
     #[test]
     fn test_table_create() {
@@ -119,20 +123,40 @@ mod tests {
         };
 
         table.create(&mut bufmgr).unwrap();
-        table.insert(&mut bufmgr, &[b"a", b"Charlie", b"MUNGER"]).unwrap();
-        table.insert(&mut bufmgr, &[b"b", b"Brian", b"LEE"]).unwrap();
-        table.insert(&mut bufmgr, &[b"c", b"Alice", b"SMITH"]).unwrap();
-        table.insert(&mut bufmgr, &[b"d", b"John", b"BAKERY"]).unwrap();
+        table
+            .insert(&mut bufmgr, &[b"a", b"Charlie", b"MUNGER"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"b", b"Brian", b"LEE"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"c", b"Alice", b"SMITH"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"d", b"John", b"BAKERY"])
+            .unwrap();
 
         bufmgr.flush().unwrap();
 
         // Check whether the records are inserted correctly.
         let btree = BTree::new(table.meta_page_id);
         let mut iter = btree.search(&mut bufmgr, btree::SearchMode::Start).unwrap();
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"Charlie", b"MUNGER"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"Brian", b"LEE"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"Alice", b"SMITH"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"John", b"BAKERY"]));
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"Charlie", b"MUNGER"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"Brian", b"LEE"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"Alice", b"SMITH"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"John", b"BAKERY"])
+        );
     }
 
     #[test]
@@ -158,28 +182,60 @@ mod tests {
 
         table.unique_index.push(unique_index);
 
-        table.insert(&mut bufmgr, &[b"a", b"Charlie", b"MUNGER"]).unwrap();
-        table.insert(&mut bufmgr, &[b"b", b"Brian", b"LEE"]).unwrap();
-        table.insert(&mut bufmgr, &[b"c", b"Alice", b"SMITH"]).unwrap();
-        table.insert(&mut bufmgr, &[b"d", b"John", b"BAKERY"]).unwrap();
+        table
+            .insert(&mut bufmgr, &[b"a", b"Charlie", b"MUNGER"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"b", b"Brian", b"LEE"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"c", b"Alice", b"SMITH"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"d", b"John", b"BAKERY"])
+            .unwrap();
 
         bufmgr.flush().unwrap();
 
         // Check whether the records are inserted correctly.
         let btree = BTree::new(table.meta_page_id);
         let mut iter = btree.search(&mut bufmgr, SearchMode::Start).unwrap();
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"Charlie", b"MUNGER"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"Brian", b"LEE"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"Alice", b"SMITH"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"John", b"BAKERY"]));
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"Charlie", b"MUNGER"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"Brian", b"LEE"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"Alice", b"SMITH"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"John", b"BAKERY"])
+        );
 
         // Check whether the unique index is created correctly.
         let btree = BTree::new(table.unique_index[0].meta_page_id);
         let mut iter = btree.search(&mut bufmgr, SearchMode::Start).unwrap();
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"c"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"b"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"a"]));
-        assert_eq!(iter.next(&mut bufmgr).unwrap().unwrap().1, get_encoded(&[b"d"]));
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"c"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"b"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"a"])
+        );
+        assert_eq!(
+            iter.next(&mut bufmgr).unwrap().unwrap().1,
+            get_encoded(&[b"d"])
+        );
     }
 
     #[test]
@@ -205,13 +261,23 @@ mod tests {
 
         table.unique_index.push(unique_index);
 
-        table.insert(&mut bufmgr, &[b"a", b"Charlie", b"MUNGER"]).unwrap();
-        table.insert(&mut bufmgr, &[b"b", b"Brian", b"LEE"]).unwrap();
-        table.insert(&mut bufmgr, &[b"c", b"Alice", b"SMITH"]).unwrap();
-        table.insert(&mut bufmgr, &[b"d", b"John", b"BAKERY"]).unwrap();
+        table
+            .insert(&mut bufmgr, &[b"a", b"Charlie", b"MUNGER"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"b", b"Brian", b"LEE"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"c", b"Alice", b"SMITH"])
+            .unwrap();
+        table
+            .insert(&mut bufmgr, &[b"d", b"John", b"BAKERY"])
+            .unwrap();
 
         // Try to insert a record with a duplicate unique key.
-        assert!(table.insert(&mut bufmgr, &[b"e", b"Charlie", b"MUNGER"]).is_err());
+        assert!(table
+            .insert(&mut bufmgr, &[b"e", b"Charlie", b"MUNGER"])
+            .is_err());
     }
 
     fn get_encoded(record: &[&[u8]]) -> Vec<u8> {

@@ -18,7 +18,10 @@ pub struct ExecSeqScan<'a> {
 
 impl<'a> ExecSeqScan<'a> {
     pub fn new(table_iter: Iter, while_cond: Condition<'a>) -> Self {
-        Self { table_iter, while_cond }
+        Self {
+            table_iter,
+            while_cond,
+        }
     }
 }
 
@@ -48,7 +51,10 @@ pub struct ExecFilter<'a> {
 
 impl<'a> ExecFilter<'a> {
     pub fn new(inner_executor: BoxExecutor<'a>, while_cond: Condition<'a>) -> Self {
-        Self { inner_executor, while_cond }
+        Self {
+            inner_executor,
+            while_cond,
+        }
     }
 }
 
@@ -71,7 +77,11 @@ pub struct ExecIndexScan<'a> {
 
 impl<'a> ExecIndexScan<'a> {
     pub fn new(table_btree: BTree, index_iter: Iter, while_cond: Condition<'a>) -> Self {
-        Self { table_btree, index_iter, while_cond }
+        Self {
+            table_btree,
+            index_iter,
+            while_cond,
+        }
     }
 }
 
